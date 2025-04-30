@@ -1,0 +1,54 @@
+----Our Menu
+
+select distinct product_type from coffee_sales
+
+------ Total Sales
+
+select round(sum(unit_price * transaction_qty),2) as total_sales from coffee_sales
+
+----- Monthly Sales 
+
+select Year(transaction_date) as Year, 
+MONTH(transaction_date) as Month,
+round(sum(unit_price * transaction_qty),2) as Total_sales from coffee_sales
+group by Year(transaction_date), MONTH(transaction_date)
+order by Year(transaction_date), MONTH(transaction_date)
+
+
+----- Sales by City
+
+
+select distinct city,
+round(sum(unit_price * transaction_qty),2) as Total_sales from coffee_sales
+group by city
+
+
+------Peak Hour Orders
+
+select top 1 datepart(hour, transaction_time) as Hour, sum(transaction_qty) as Hourly_Orders from coffee_sales
+group by datepart(hour, transaction_time)
+order by Hourly_Orders desc
+
+-----Weekday and Weekend sales
+
+select case 
+when datepart(weekday, transaction_date) between 2 and 6 then 'Weekdays'
+when datepart(weekday, transaction_date) in (1,7) then 'Weekend'
+end as Day_Type,
+round(sum(unit_price * transaction_qty),2) AS Total_sales
+from coffee_sales
+WHERE transaction_date between '2023-01-01' and '2023-01-31'
+group by case when datepart(weekday, transaction_date) between 2 and 6 then 'Weekdays'
+when datepart(weekday, transaction_date) in (1,7) then 'Weekend'
+end
+
+-------MOM Sales
+SELECT 
+MONTH(transaction_date) AS month,
+ROUND(SUM(transaction_qty),2) AS total_quantity_sold,
+round((SUM(transaction_qty) - LAG(SUM(transaction_qty), 1) 
+OVER (ORDER BY MONTH(transaction_date))) / LAG(SUM(transaction_qty), 1) 
+OVER (ORDER BY MONTH(transaction_date)) * 100,2) AS mom_increase_percentage
+FROM coffee_sales
+GROUP BY MONTH(transaction_date)
+ORDER BY MONTH(transaction_date);
